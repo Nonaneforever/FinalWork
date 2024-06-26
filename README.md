@@ -178,7 +178,7 @@ sudo apt install -y ros-melodic-camera-info-manager ros-melodic-image-transport 
 
 Создайте файл Dockerfile в корне вашего ROS Workspace:
 ```
-# Базовый образ с Ubuntu 18.04 и ROS Melodic
+# Базовый образ с ROS Melodic
 FROM ros:melodic-ros-base-bionic
 
 # Установка необходимых пакетов ROS
