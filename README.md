@@ -45,6 +45,8 @@ source devel/setup.bash
 
 Скрипт устанавливает все необходимые пакеты и зависимости для работы с LIDAR Velodyne VLP-16, контроллерами двигателей ODrive и IMU-датчиком XSens MTI-1 в ROS Melodic на Ubuntu. Скрипт также настроит окружение ROS и SSH доступ.
 
+Скрипт автоматической установки `install_robot_dependencies.sh` :
+
 ```
 #!/bin/bash
 
@@ -119,7 +121,132 @@ cat ~/.ssh/id_rsa.pub
 echo "Настройка завершена."
 ```
 
+#### Создание ROS-пакета с LAUNCH-файлом
 
+Для создания ROS-пакета и LAUNCH-файла используйте следующие команды:
+```
+cd ~/catkin_ws/src
+catkin_create_pkg my_robot_control rospy std_msgs  # Примерный набор зависимостей
+cd my_robot_control
+mkdir launch
+touch my_robot.launch
+```
 
+Скрипт `my_robot.launch`:
+```
+<launch>
+    <arg name="rviz" default="false"/>
+    <arg name="rqt" default="false"/>
+
+    <node name="velodyne_node" pkg="velodyne" type="velodyne_node" output="screen"/>
+
+    <group if="$(arg rviz)">
+        <node name="rviz" pkg="rviz" type="rviz"/>
+    </group>
+
+    <group if="$(arg rqt)">
+        <node name="rqt" pkg="rqt_gui" type="rqt_gui"/>
+    </group>
+</launch>
+```
+
+#### Подключение и проверка работы датчика (например, веб-камера)
+
+Установка необходимых пакетов для работы с веб-камерой:
+```
+sudo apt install -y ros-melodic-camera-info-manager ros-melodic-image-transport ros-melodic-cv-camera
+```
+
+Пример использования веб-камеры в launch-файле:
+```
+<launch>
+    <node name="usb_cam" pkg="usb_cam" type="usb_cam_node" output="screen">
+        <param name="video_device" value="/dev/video0"/>
+        <param name="image_width" value="640"/>
+        <param name="image_height" value="480"/>
+        <param name="pixel_format" value="mjpeg"/>
+        <param name="camera_frame_id" value="usb_cam"/>
+    </node>
+
+    <node name="image_view" pkg="image_view" type="image_view" respawn="false" output="screen">
+        <remap from="image" to="/usb_cam/image_raw"/>
+    </node>
+</launch>
+```
+
+#### Создание Dockerfile для сборки docker-образа
+
+Создайте файл Dockerfile в корне вашего ROS Workspace:
+```
+# Базовый образ с Ubuntu 18.04 и ROS Melodic
+FROM ros:melodic-ros-base-bionic
+
+# Установка необходимых пакетов ROS
+RUN apt-get update && apt-get install -y \
+    ros-melodic-desktop-full \
+    ros-melodic-velodyne \
+    ros-melodic-usb-cam \
+    ros-melodic-rviz \
+    ros-melodic-rqt \
+    && rm -rf /var/lib/apt/lists/*
+
+# Установка пакетов для удалённого доступа по SSH
+RUN apt-get update && apt-get install -y \
+    openssh-server \
+    && rm -rf /var/lib/apt/lists/*
+
+# Настройка SSH доступа
+RUN mkdir /var/run/sshd
+
+# Добавление SSH ключа для пользователя root
+COPY id_rsa.pub /root/.ssh/authorized_keys
+RUN chmod 600 /root/.ssh/authorized_keys \
+    && chown root:root /root/.ssh/authorized_keys
+
+# Настройка SSH сервера
+RUN echo "PermitRootLogin yes" >> /etc/ssh/sshd_config \
+    && echo "PasswordAuthentication no" >> /etc/ssh/sshd_config
+
+EXPOSE 22
+
+CMD ["/usr/sbin/sshd", "-D"]
+```
+
+#### Инструкция по использованию Dockerfile
+
+1. Создайте новый каталог для вашего проекта Docker, если его еще нет:
+```
+mkdir ~/my_robot_docker
+cd ~/my_robot_docker
+```
+
+2. Сохраните Dockerfile в этом каталоге.
+
+3. Создайте или скопируйте ваш публичный SSH ключ в файл id_rsa.pub в том же каталоге. Если у вас еще нет SSH ключей, вы можете создать их с помощью следующей команды:
+```
+ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+```
+
+4. Постройте Docker-образ:
+```
+docker build -t my_robot_image .
+```
+
+5. Запустите Docker-контейнер:
+```
+docker run -d -p 2222:22 --name my_robot_container my_robot_image
+```
+
+6. Подключитесь к контейнеру по SSH:
+```
+ssh -p 2222 root@localhost
+```
+
+Убедитесь, что ваш SSH агент настроен для использования ключа, или используйте флаг -i для указания файла ключа:
+```
+ssh -i ~/.ssh/id_rsa -p 2222 root@localhost
+```
+
+### Конец
 
 
