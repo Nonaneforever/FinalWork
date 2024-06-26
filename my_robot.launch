@@ -1,0 +1,14 @@
+<launch>
+    <arg name="rviz" default="false"/>
+    <arg name="rqt" default="false"/>
+
+    <node name="velodyne_node" pkg="velodyne" type="velodyne_node" output="screen"/>
+
+    <group if="$(arg rviz)">
+        <node name="rviz" pkg="rviz" type="rviz"/>
+    </group>
+
+    <group if="$(arg rqt)">
+        <node name="rqt" pkg="rqt_gui" type="rqt_gui"/>
+    </group>
+</launch>
