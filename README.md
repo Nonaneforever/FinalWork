@@ -12,6 +12,39 @@
 
 4. XSens MTI-1 IMU: Используется для оценки ориентации и мониторинга движения робота. Подключается к NVIDIA Jetson через UART или SPI интерфейс для передачи данных о поворотах и ускорениях.
 
+Схема подключения к модулю NVIDIA Jetson TX2 представлена на рисунке в файле.
+
+Распиновка:
+1. LIDAR (Velodyne VLP-16, подключение через Ethernet)
+Подключите Ethernet кабель от LIDAR к Ethernet порту на NVIDIA Jetson TX2.
+2. Контроллер двигателей (ODrive, подключение через UART)
+TX Jetson (Pin 8, UART2_TX) → RX ODrive
+RX Jetson (Pin 10, UART2_RX) → TX ODrive
+GND Jetson (Pin 6) → GND ODrive
+3. IMU-датчик (XSens MTI-1, подключение через UART)
+TX Jetson (Pin 11, UART1_TX) → RX XSens MTI-1
+RX Jetson (Pin 13, UART1_RX) → TX XSens MTI-1
+GND Jetson (Pin 1) → GND XSens MTI-1
+3.3V Jetson (Pin 2) → VCC XSens MTI-1
+
+ Подключение:
+LIDAR (Velodyne VLP-16):
+
+Подключите Ethernet кабель от LIDAR к Ethernet порту на Jetson TX2.
+Контроллер двигателей (ODrive):
+
+Подключите Pin 8 (UART2_TX) Jetson к RX ODrive.
+Подключите Pin 10 (UART2_RX) Jetson к TX ODrive.
+Подключите Pin 6 (GND) Jetson к GND ODrive.
+IMU-датчик (XSens MTI-1):
+
+Подключите Pin 11 (UART1_TX) Jetson к RX XSens MTI-1.
+Подключите Pin 13 (UART1_RX) Jetson к TX XSens MTI-1.
+Подключите Pin 1 (GND) Jetson к GND XSens MTI-1.
+Подключите Pin 2 (3.3V) Jetson к VCC XSens MTI-1.
+
+Расположение пинов на NVIDIA Jetson TX2 представлена на рисунке в файле.
+    
 #### Библиотеки и пакеты ROS для подключения датчиков
 
 Для работы с вышеуказанными датчиками (LIDAR Velodyne VLP-16, контроллеры двигателей ODrive, IMU-датчик XSens MTI-1) в ROS на основе Ubuntu (Linux), потребуется установить следующие пакеты и библиотеки. Предполагается, что у вас уже установлен ROS Melodic или другая поддерживаемая версия ROS. 
